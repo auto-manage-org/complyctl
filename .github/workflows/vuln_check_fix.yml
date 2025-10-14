@@ -99,7 +99,8 @@ jobs:
         run: |
           OWNER="auto-manage-org" 
           REPO="complyctl"
-          PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} due to "
+          action_run ="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} due to $action_run"
           if [[ "$(git branch --show-current)" == "${{ env.BRANCH_NAME }}" ]]; then
             # Check if the PR exists
             PR_EXISTS=$(gh pr list --repo $OWNER/$REPO \
@@ -108,16 +109,15 @@ jobs:
             if [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR ${{ env.BRANCH_NAME }} already exists. Skipping PR creation."
               echo "Add a comment for the go version update."
-                gh pr comment ${{ env.BRANCH_NAME }} --body "${PR_BODY}"
-              else
-                echo "Creating PR for new branch: ${{ env.BRANCH_NAME }}"
-                gh pr create --repo $OWNER/$REPO \
-                  --title "Bump go version ${{ env.FIXED_VERSION }} in gomod" \
-                  --head "${{ env.BRANCH_NAME }}" \
-                  --base "main" \
-                  --reviewer "huiwangredhat" \
-                  --body "${PR_BODY}"
-              fi
+              gh pr comment ${{ env.BRANCH_NAME }} --body "${PR_BODY}"
+            else
+              echo "Creating PR for new branch: ${{ env.BRANCH_NAME }}"
+              gh pr create --repo $OWNER/$REPO \
+                --title "Bump go version ${{ env.FIXED_VERSION }} in gomod" \
+                --head "${{ env.BRANCH_NAME }}" \
+                --base "main" \
+                --reviewer "huiwangredhat" \
+                --body "${PR_BODY}"
             fi
           else
             echo "No branch ${{ env.BRANCH_NAME }}. Skipping PR creation."

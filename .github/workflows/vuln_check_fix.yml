@@ -73,6 +73,8 @@ jobs:
       - name: Upgrade go to fixed version
         if: env.FIXED_VERSION != ''
         run: |
+          git config user.name "complytime-ci"
+          git config user.email "complytime-ci@gmail.com"
           git fetch --all
           if git show-ref --verify --quiet refs/remotes/origin/"${{ env.BRANCH_NAME }}"; then
             echo "Branch $BRANCH_NAME exists, checkout the branch."

@@ -99,7 +99,7 @@ jobs:
         run: |
           OWNER="auto-manage-org" 
           REPO="complyctl"
-          action_run ="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          action_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} due to $action_run"
           if [[ "$(git branch --show-current)" == "${{ env.BRANCH_NAME }}" ]]; then
             # Check if the PR exists

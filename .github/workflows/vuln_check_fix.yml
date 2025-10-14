@@ -58,7 +58,6 @@ jobs:
       - name: Set the branches
         if: env.FIXED_VERSION != ''
         run: |
-          cd main-complyctl
           PR_BRANCH=$(gh pr list --state open --json headRefName --jq '.[] | select(.headRefName | contains("update-go-version")) | .headRefName' | head -n 1)
           if [[ -n "$PR_BRANCH" ]]; then
             echo "Found matching PR branch: $PR_BRANCH"
@@ -74,7 +73,6 @@ jobs:
       - name: Upgrade go to fixed version
         if: env.FIXED_VERSION != ''
         run: |
-          cd main-complyctl
           git fetch --all
           if git show-ref --verify --quiet refs/remotes/origin/"${{ env.BRANCH_NAME }}"; then
             echo "Branch $BRANCH_NAME exists, checkout the branch."
@@ -97,7 +95,6 @@ jobs:
       - name: Create PR or update the existing PR
         if: env.FIXED_VERSION != ''
         run: |
-          cd main-complyctl
           OWNER="auto-manage-org" 
           REPO="complyctl"
           PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} due to "

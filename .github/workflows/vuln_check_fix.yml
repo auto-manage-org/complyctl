@@ -73,8 +73,6 @@ jobs:
       - name: Upgrade go to fixed version
         if: env.FIXED_VERSION != ''
         run: |
-          git config user.name "complytime-ci"
-          git config user.email "complytime-ci@gmail.com"
           git fetch --all
           if git show-ref --verify --quiet refs/remotes/origin/"${{ env.BRANCH_NAME }}"; then
             echo "Branch $BRANCH_NAME exists, checkout the branch."
@@ -85,9 +83,15 @@ jobs:
           fi
           go mod edit -go=${{ env.FIXED_VERSION }}
           go mod tidy
-          git add go.mod go.sum
-          git commit -m "Update the gomod version to ${{ env.FIXED_VERSION }}"
-          git push origin ${{ env.BRANCH_NAME }} -f
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "No changes to the go.mod file. Nothing to commit."
+          else
+            git config user.name "complytime-ci"
+            git config user.email "complytime-ci@gmail.com"
+            git add go.mod go.sum
+            git commit -m "Update the gomod version to ${{ env.FIXED_VERSION }}"
+            git push origin ${{ env.BRANCH_NAME }} -f
+          fi
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: Create PR or update the existing PR

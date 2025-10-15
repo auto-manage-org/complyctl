@@ -3,7 +3,7 @@ name: Daily Scheduled Job
 on:
   schedule:
     # This schedule runs the workflow at 5:30 AM UTC every day
-    - cron: "2 2 * * *"
+    - cron: "18 2 * * *"
 
 jobs:
   daily-task:

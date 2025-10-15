@@ -1,0 +1,19 @@
+name: Daily Scheduled Job
+
+on:
+  schedule:
+    # This schedule runs the workflow at 5:30 AM UTC every day
+    - cron: "2 2 * * *"
+
+jobs:
+  daily-task:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Run a simple command
+      - name: Run a script
+        run: echo "Hello! This is the daily scheduled job running."
+

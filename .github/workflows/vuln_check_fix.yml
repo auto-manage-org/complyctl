@@ -41,6 +41,7 @@ jobs:
         id: osv-scanner
         run: |
           JOB_ID=$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "${{ github.job }}") | .id')
+          echo "job id is $JOB_ID"
           echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
           # Show the vulnaribilities
           osv-scanner . || true
@@ -102,6 +103,7 @@ jobs:
         run: |
           OWNER="auto-manage-org" 
           REPO="complyctl"
+          echo "job id is ${{ env.job_id }}"
           action_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ env.job_id }}"
           PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} to fix the findings from job $action_run"
           if [[ "$(git branch --show-current)" == "${{ env.BRANCH_NAME }}" ]]; then

@@ -8,7 +8,7 @@
 name: Vulnerability-fix
 on:
   schedule:
-    - cron: "49 1 * * *"
+    - cron: "53 1 * * *"
   workflow_dispatch: 
 
 permissions:

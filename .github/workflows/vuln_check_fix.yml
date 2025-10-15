@@ -1,14 +1,13 @@
-# This workflow is for vulnerability checking and fix.
+# This workflow is for vulnerability checking and fix for go version in gomod.
 # It could be triggerred daily. If this workflow finds any CVEs,
-# it will create the PR to fix the CVEs. Also, if you find
-# the workflow OSV-Scan failed, you can triggerred this
-# workflow with workflow_dispatch. It will help to create PR
+# it will create the PR to fix the CVEs. Also, you can triggerred this
+# workflow with workflow_dispatch. It will help to create a PR
 # to fix the vulnerabilities automatically.
 
-name: Vulnerability-fix
+name: Vulnerability-check-fix
 on:
   schedule:
-    - cron: "5 2 * * *"
+    - cron: "0 0 * * *"
   workflow_dispatch: 
 
 permissions:
@@ -27,25 +26,13 @@ jobs:
       - name: Install osv-scanner
         run: |
           cat go.mod
-          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@a66ef4bd60622d94e536ee3ee5592ea1e3e9a382
-      - name: Get GitHub app token
-        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: |
-            complyctl
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@a66ef4bd60622d94e536ee3ee5592ea1e3e9a382 # v2.2.3
       - name: Check vulnerability
         id: osv-scanner
         run: |
-          JOB_ID=$(gh run view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "${{ github.job }}") | .id')
-          echo "job id is $JOB_ID"
-          echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
           # Show the vulnaribilities
           osv-scanner . || true
-          # Get the fixed version from the results.sarif
+          # Get the CVEs fixed version from the results.sarif
           osv-scanner  -r --format=sarif . > results.sarif || true
           if [ -f "results.sarif" ] && [ -s "results.sarif" ]; then
             FIXED_VERSION=$(jq -r '.runs[0].tool.driver.rules[] | .help.markdown | capture("### Fixed Versions\\s*\\|.+\\n\\|.+\\n\\|\\s*[^|]+?\\s*\\|\\s*[^|]+?\\s*\\|\\s*(?<version>[^|]+?)\\s*\\|") | .version' results.sarif | tr ',' '\n' | sed 's/ //g' | sort -V | tail -n 1)
@@ -58,7 +45,17 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-      # Upgrade the go version
+      # Upgrade the go version to the fixed version
+      - name: Get GitHub app token
+        if: env.FIXED_VERSION != ''
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            complyctl
       - name: Set the branches
         if: env.FIXED_VERSION != ''
         run: |
@@ -103,8 +100,7 @@ jobs:
         run: |
           OWNER="auto-manage-org" 
           REPO="complyctl"
-          echo "job id is ${{ env.job_id }}"
-          action_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ env.job_id }}"
+          action_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           PR_BODY="Bump golang version to ${{ env.FIXED_VERSION }} to fix the findings from job $action_run"
           if [[ "$(git branch --show-current)" == "${{ env.BRANCH_NAME }}" ]]; then
             # Check if the PR exists
@@ -118,7 +114,7 @@ jobs:
             else
               echo "Creating PR for new branch: ${{ env.BRANCH_NAME }}"
               gh pr create --repo $OWNER/$REPO \
-                --title "Bump go version ${{ env.FIXED_VERSION }} in gomod" \
+                --title "chore: bump go version to ${{ env.FIXED_VERSION }} in gomod" \
                 --head "${{ env.BRANCH_NAME }}" \
                 --base "main" \
                 --reviewer "huiwangredhat" \

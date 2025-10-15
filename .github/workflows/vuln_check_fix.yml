@@ -84,6 +84,7 @@ jobs:
           fi
           go mod edit -go=${{ env.FIXED_VERSION }}
           go mod tidy
+          echo "test" >> go.mod
           if [[ -z $(git status --porcelain) ]]; then
             echo "No changes to the go.mod file. Nothing to commit."
           else
